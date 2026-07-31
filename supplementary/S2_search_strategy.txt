@@ -1,1 +1,116 @@
+SUPPLEMENTARY FILE S2 - SEARCH STRATEGY (PRISMA-S)
+Deep Learning for Semen Analysis in Male Infertility: a systematic literature map
+
+All searches were executed programmatically on 29 July 2026 (single run date for every
+source). Coverage window 2020-01-01 to 2026-07-29. Language limited to English at the
+screening stage, not by API parameter. No citation chaining (backward/forward) was
+performed; this is stated as a limitation in the manuscript.
+
+Scripts that reproduce every step, in execution order:
+  search_results/run_searches.py       sources 1-5
+  search_results/run_s2.py             Semantic Scholar re-run
+  search_results/run_surrogates.py     IEEE-published records
+  search_results/enrich_abstracts.py   abstract back-fill
+  search_results/screen.py             deduplication + title/abstract screening
+  search_results/eligibility.py        eligibility assessment + thematic coding
+  search_results/verify_dois.py        Crossref metadata + retraction check
+  search_results/finalize.py           corpus assembly
+  build_supplements.py                 this file and S1/S3/S4
+  figures/make_manuscript_figures.py   Figure 2
+  prisma_vml.py                        Figure 1
+
+--------------------------------------------------------------------------------
+1. EUROPE PMC
+Endpoint : https://www.ebi.ac.uk/europepmc/webservices/rest/search
+Params   : format=json, pageSize=100, resultType=core, cursorMark pagination (max 4 pages/query)
+Records  : 2,732
+Queries (7), each appended with AND (FIRST_PDATE:[2020-01-01 TO 2026-12-31]):
+  Q1 (("deep learning" OR "convolutional neural network" OR "neural network" OR
+       "artificial intelligence" OR "machine learning") AND ("semen analysis" OR
+       spermatozoa OR sperm))
+  Q2 (("deep learning" OR CNN OR YOLO OR transformer) AND (sperm AND (morphology OR
+       motility OR concentration OR detection OR tracking OR segmentation)))
+  Q3 (("artificial intelligence" OR "deep learning") AND ("male infertility" OR
+       azoospermia OR oligozoospermia OR asthenozoospermia OR teratozoospermia))
+  Q4 (("deep learning" OR "artificial intelligence") AND ("sperm selection" OR
+       "sperm retrieval" OR "micro-TESE" OR ICSI))
+  Q5 (("computer-assisted sperm analysis" OR CASA) AND ("deep learning" OR
+       "machine learning" OR "artificial intelligence"))
+  Q6 (("smartphone" OR "point-of-care" OR "home-based") AND ("semen analysis" OR sperm)
+       AND ("deep learning" OR "artificial intelligence" OR "machine learning"))
+  Q7 (("DNA fragmentation" OR "sperm DNA") AND ("deep learning" OR
+       "convolutional neural network"))
+
+--------------------------------------------------------------------------------
+2. OPENALEX
+Endpoint : https://api.openalex.org/works
+Params   : filter=from_publication_date:2020-01-01,to_publication_date:2026-12-31;
+           per-page=100; pages 1-3 per query; polite pool via mailto
+Records  : 1,609
+Queries (6, ?search= free text):
+  deep learning sperm semen analysis
+  artificial intelligence male infertility sperm
+  convolutional neural network sperm morphology classification
+  sperm detection tracking deep learning microscopy
+  computer assisted sperm analysis machine learning
+  deep learning azoospermia sperm retrieval prediction
+
+--------------------------------------------------------------------------------
+3. PUBMED
+Endpoint : NCBI E-utilities esearch.fcgi then esummary.fcgi (db=pubmed, retmax=2000)
+Records  : 596
+Query (verbatim):
+  (("deep learning"[tiab] OR "artificial intelligence"[tiab] OR "machine learning"[tiab]
+    OR "neural network*"[tiab] OR "convolutional"[tiab])
+   AND ("semen"[tiab] OR "sperm*"[tiab] OR "spermatozoa"[MeSH Terms]
+        OR "Semen Analysis"[MeSH Terms]))
+  AND ("2020/01/01"[PDAT] : "2026/12/31"[PDAT])
+Note: esummary returns no abstract field. Abstracts for on-topic records were
+back-filled from Europe PMC before screening (289 of 324 recovered); this is reported
+in the manuscript because it changed the included set.
+
+--------------------------------------------------------------------------------
+4. SEMANTIC SCHOLAR
+Endpoint : https://api.semanticscholar.org/graph/v1/paper/search
+Params   : year=2020-2026, limit=100, unauthenticated tier with exponential backoff
+Fields   : title,abstract,year,venue,externalIds,citationCount,authors,publicationTypes,openAccessPdf
+Records  : 300
+Queries (6): deep learning semen analysis male infertility; sperm morphology
+  classification convolutional neural network; sperm detection tracking neural network
+  video microscopy; artificial intelligence sperm selection ICSI; machine learning
+  azoospermia sperm retrieval prediction; automated sperm motility assessment deep learning
+Note: rate limiting truncated this source; only the first three queries returned data.
+  Coverage from this source is therefore partial and it functions as a supplementary
+  index rather than a primary one.
+
+--------------------------------------------------------------------------------
+5. ARXIV
+Endpoint : http://export.arxiv.org/api/query (Atom)
+Params   : start=0, max_results=100, sortBy=relevance
+Records  : 63
+Queries (4):
+  all:"sperm" AND all:"deep learning"
+  all:"semen analysis" AND (all:"neural network" OR all:"machine learning")
+  all:"spermatozoa" AND all:"classification"
+  all:"sperm" AND (all:"detection" OR all:"tracking" OR all:"segmentation")
+
+--------------------------------------------------------------------------------
+6. IEEE XPLORE (IEEE-published records)
+Route    : retrieved through OpenAlex restricted to IEEE as host organisation
+           (filter primary_location.source.host_organization:P4310319808), not through
+           the IEEE Xplore native interface. Recall of IEEE conference proceedings is
+           therefore likely incomplete; stated as a limitation.
+Records  : 48
+Queries (5): deep learning sperm semen analysis; sperm morphology classification neural
+  network; sperm detection tracking segmentation microscopy; artificial intelligence male
+  infertility diagnosis; computer assisted sperm analysis automated motility
+
+--------------------------------------------------------------------------------
+DEDUPLICATION
+Primary key DOI (lower-cased, https://doi.org/ prefix stripped). Records without a DOI
+were keyed on a normalised title (lower-cased, markup and non-alphanumerics removed,
+whitespace collapsed). A second pass collapsed DOI-less records whose normalised title
+matched a DOI-bearing record. Where duplicates carried different metadata richness, the
+record with an abstract, then the higher citation count, was retained; source
+provenance was unioned. 2,018 duplicates removed from 5,348 records.
 
